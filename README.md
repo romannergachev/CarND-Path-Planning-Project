@@ -107,6 +107,17 @@ approach in order to keep following the lane with respect to the speed of the ca
 In order to continue I've decided that some decision logic is required to I've come to the idea of adoption the lecture based approach with Finite State Machines. 
 I've implemented states as enum, totally getting to the KEEP_LANE, CHANGE_LEFT, CHANGE_RIGHT, PREPARE_TO_CHANGE_RIGHT and PREPARE_TO_CHANGE_LEFT. 
 However in the end I've decided to go without 2 prepare states and left only one of them called PREPARE_TO_CHANGE.
+Regarding the possible states changes: 
+
+KEEP_LANE         -> KEEP_LANE, PREPARE_TO_CHANGE_RIGHT 
+
+CHANGE_LEFT       -> KEEP_LANE
+
+CHANGE_RIGHT      -> KEEP_LANE 
+
+PREPARE_TO_CHANGE -> PREPARE_TO_CHANGE, KEEP_LANE, CHANGE_LEFT, CHANGE_RIGHT
+
+
 
 For the car in order to change the lane - the other lane should have enough space for the car to fit in with addition 
 of some buffer space around it based on S coordinates. In addition if there is a car driving on the target lane behind us then our speed should correspond 

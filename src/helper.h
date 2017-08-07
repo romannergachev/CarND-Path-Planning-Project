@@ -16,7 +16,7 @@ using namespace std;
 #define SAFE_DELTA 15
 //speed in meters per second
 #define SPEED_LIMIT 20.5
-//acceleration max = from 0 to 50 in 20 sec
+//acceleration max
 #define TIME_TO_MAX 5.0
 
 double laneToD(int lane);
