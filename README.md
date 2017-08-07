@@ -1,7 +1,7 @@
 # CarND-Path-Planning-Project
 Self-Driving Car Engineer Nanodegree Program
    
-### Simulator. You can download the Term3 Simulator BETA which contains the Path Planning Project from the [releases tab](https://github.com/udacity/self-driving-car-sim/releases).
+### Simulator. You can download the Term3 Simulator which contains the Path Planning Project from the [releases tab](https://github.com/udacity/self-driving-car-sim/releases).
 
 In this project your goal is to safely navigate around a virtual highway with other traffic that is driving +-10 MPH of the 50 MPH speed limit. You will be provided the car's localization and sensor fusion data, there is also a sparse map list of waypoints around the highway. The car should try to go as close as possible to the 50 MPH speed limit, which means passing slower traffic when possible, note that other cars will try to change lanes too. The car should avoid hitting other cars at all cost as well as driving inside of the marked road lanes at all times, unless going from one lane to another. The car should be able to make one complete loop around the 6946m highway. Since the car is trying to go 50 MPH, it should take a little over 5 minutes to complete 1 loop. Also the car should not experience total acceleration over 10 m/s^2 and jerk that is greater than 50 m/s^3.
 
@@ -84,51 +84,47 @@ A really helpful resource for doing this project and creating smooth trajectorie
     cd uWebSockets
     git checkout e94b6e1
     ```
+    
+---
 
-## Editor Settings
+## Starting the project, driving over the map
 
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
+Since I've been frustrated on how to initially start implementing the project I decided to start with the thing I already have: I made the car drive over
+the waypoints from the highway_map. It was pretty straightforward and I've been able to implement that quickly. Next step for me was offsetting the from
+the center of the road and trying to drive the car through the waypoints but trying to stay on the lane (not smoothly, quite terrible, but it worked).
+The hardest part has been to drive smoothly over the track and have smooth velocity, acceleration and small Jerk. To do that I've
+used simple motion physics formula in order to calculate speed, acceleration and distance. In addition I set speed limit in order the car won't be able to
+drive faster than it is permitted. After deriving that data I've used Jerk formula from the lesson to get minimizing Jerk trajectory. After that I've got
+point corresponding to that trajectory and interpolated them in order to get nice and smooth curve corresponding to the selected trajectory.
 
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
-
-## Code Style
-
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
-
-## Project Instructions and Rubric
-
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
+As a next step I decided that the car should drive in a safe manner, keeping the lane and following vehicle in front of it. 
+I've found the closest car in front of our car and used the data to calculate it's speed in order to safely follow this car and applied the discussed above
+approach in order to keep following the lane with respect to the speed of the car in front of us.
 
 
-## Call for IDE Profiles Pull Requests
+## Define Car Behavior States
 
-Help your fellow students!
+In order to continue I've decided that some decision logic is required to I've come to the idea of adoption the lecture based approach with Finite State Machines. 
+I've implemented states as enum, totally getting to the KEEP_LANE, CHANGE_LEFT, CHANGE_RIGHT, PREPARE_TO_CHANGE_RIGHT and PREPARE_TO_CHANGE_LEFT. 
+However in the end I've decided to go without 2 prepare states and left only one of them called PREPARE_TO_CHANGE.
 
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to ensure
-that students don't feel pressured to use one IDE or another.
+For the car in order to change the lane - the other lane should have enough space for the car to fit in with addition 
+of some buffer space around it based on S coordinates. In addition if there is a car driving on the target lane behind us then our speed should correspond 
+to the cars' speed in order not to collide with it and be able to safely change lane. My logic of changing the lanes also handles
+the case when there are to options (left and right) for us to change the current lane: if both of lanes are free - left lane would be
+the choice since in the real life it is typically 'faster' lane. 
+In the end if the lane change is not possible, but desirable the car will wait for the best opportunity to change the lane, but continue keeping it until it is 
+safe to perform the maneuver.
 
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
+Car drives for 10 miles without any major issues:
 
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
+[![10 miles drive](https://img.youtube.com/vi/_fPIWBa80TA/0.jpg)](https://youtu.be/_fPIWBa80TA)
 
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
+---
 
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
+## Future Improvements
 
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
+My path planner is not able to handle difficult situations like slowing down in order to overcome the vehicle, e.g.: we're on the right lane, the slow vehicle is
+in front of us and we'd like to overcome it, but in the center lane there is another slow vehicle. So possible solution would be to slow down, 
+let the slow vehicle in the center lane pass, and after that move to the empty leftmost lane previously blocked by the slow vehicle in the middle lane.
+
